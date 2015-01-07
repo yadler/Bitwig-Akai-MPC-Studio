@@ -99,19 +99,21 @@ function MPCStudio()
 
 function switchBank()
 {
-    println("switchBank to " + mpcStudio.bank + " - base offset: " + mpcStudio.bankOffset * 16);
+    println("switchBank to " + mpcStudio.bank + " - base offset: " + mpcStudio.bankOffset * mpcStudio.bank);
        
     var button = 35 + (mpcStudio.bank - 1) % 4;
     var color = mpcStudio.bank < 5 ? MPC_STUDIO_MIDI_OUT_BUTTON_COLOR_PRIMARY : MPC_STUDIO_MIDI_OUT_BUTTON_COLOR_SECONDARY;
     
+    // bank lights
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 35, 0);
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 36, 0);
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 37, 0);
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 38, 0);
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, button, color);
     
+    // pad translations
+    mpcStudio.padTranslation = initArray(-1, 128);
     mpcStudio.padTranslation[37] = mpcStudio.bank * mpcStudio.bankOffset - mpcStudio.bankOffset;
-    println("pad1: " +padTranslation[37]);
     mpcStudio.padTranslation[36] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 1);
     mpcStudio.padTranslation[42] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 2);
     mpcStudio.padTranslation[82] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 3);
