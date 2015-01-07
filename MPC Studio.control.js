@@ -14,6 +14,7 @@ var MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_GREEN = 1
 var MPC_STUDIO_MIDI_OUT_PAD_COLOR_GREEN = 7
 var MPC_STUDIO_MIDI_OUT_PAD_COLOR_RED = 48
 var MPC_STUDIO_MIDI_OUT_PAD_COLOR_ORANGE = 127
+var MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_YELLOW = 10
 
 var MPC_STUDIO_MIDI_OUT_BUTTONS = 186
 var MPC_STUDIO_MIDI_OUT_BUTTON_COLOR_PRIMARY = 1
@@ -100,17 +101,23 @@ function MPCStudio()
 function switchBank()
 {
     println("switchBank to " + mpcStudio.bank + " - base offset: " + mpcStudio.bankOffset * mpcStudio.bank);
-       
+
     var button = 35 + (mpcStudio.bank - 1) % 4;
     var color = mpcStudio.bank < 5 ? MPC_STUDIO_MIDI_OUT_BUTTON_COLOR_PRIMARY : MPC_STUDIO_MIDI_OUT_BUTTON_COLOR_SECONDARY;
-    
+
     // bank lights
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 35, 0);
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 36, 0);
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 37, 0);
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 38, 0);
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, button, color);
-    
+
+    // pad lights
+    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_PADS, 49, mpcStudio.bankOffset == 12 ? MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_YELLOW : MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_GREEN);
+    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_PADS, 55, mpcStudio.bankOffset == 12 ? MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_YELLOW : MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_GREEN);
+    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_PADS, 51, mpcStudio.bankOffset == 12 ? MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_YELLOW : MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_GREEN);
+    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_PADS, 53, mpcStudio.bankOffset == 12 ? MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_YELLOW : MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_GREEN);
+
     // pad translations
     mpcStudio.padTranslation = initArray(-1, 128);
     mpcStudio.padTranslation[37] = mpcStudio.bank * mpcStudio.bankOffset - mpcStudio.bankOffset;
@@ -202,7 +209,12 @@ function handleControlButtons(midi)
 }
 
 function handlePads(midi) {
-    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_PADS, midi.data1, midi.data2 > 0 ? MPC_STUDIO_MIDI_OUT_PAD_COLOR_RED : MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_GREEN);
+    var color = midi.data2 > 0 ? MPC_STUDIO_MIDI_OUT_PAD_COLOR_RED : MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_GREEN;
+    if (mpcStudio.bankOffset == 12 && midi.data2 == 0 && (midi.data1 == 49 || midi.data1 == 55 || midi.data1 == 51 || midi.data1 == 53)  ) {
+        color = MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_YELLOW;
+    }
+    
+    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_PADS, midi.data1, color);
 }
 
 function onSysex(data)
