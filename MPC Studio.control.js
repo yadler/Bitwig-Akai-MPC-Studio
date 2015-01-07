@@ -1,11 +1,10 @@
 // Akai MPC Studio Mapping for Bitwig Studio (1.1)
 // by Yves Adler
 
-load("Extensions.js");
 loadAPI(1);
 
 host.defineController("Akai", "MPC Studio", "1.0", "F5D3FCF0-8113-11E4-B4A9-0800200C9A66");
-host.defineSysexIdentityReply("F0 7E 00 06 02 47 13 00 19 00 01 01 00 00 00 00 00 00 4B 31 31 33 30 31 30 32 37 39 31 34 32 30 36 30 F7");
+host.defineSysexIdentityReply("F0 7E 00 06 02 47 13 00 19 00 01 01 00 00 00 00 00 00 4B 31 31 33 30 31 30 32 37 39 31 34 ?? ?? ?? ?? F7");
 host.defineMidiPorts(1, 1);
 host.addDeviceNameBasedDiscoveryPair(["MPC Public"], ["MPC Public"]);
 
@@ -24,10 +23,14 @@ var mpcStudio = null;
 function init()
 {
     mpcStudio = MPCStudio()
+    switchBank();
 }
 
 function MPCStudio()
 {
+    this.shiftMode = false;
+    this.bank = 1;
+    
     host.getMidiInPort(0).setMidiCallback(onMidi);
     host.getMidiInPort(0).setSysexCallback(onSysex);
     host.getMidiOutPort(0).setShouldSendMidiBeatClock(true);
@@ -42,49 +45,11 @@ function MPCStudio()
         host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, i, 0);
     }
     
-        //host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_PADS, 37, MPC_STUDIO_MIDI_OUT_BUTTON_COLOR_SECONDARY);
-    
-    // -------------------------------------------------------------
-    // PADS: WIP
-    
     this.midiInPads = host.getMidiInPort(0).createNoteInput("Pads", "?9????");
 	this.midiInPads.setShouldConsumeEvents(false);
-    
-    
-    var padTranslation = initArray(-1, 128);
-    padTranslation[37] = 0;
-    padTranslation[36] = 1;
-    padTranslation[42] = 2;
-    padTranslation[82] = 3;
-    
-    padTranslation[40] = 4;
-    padTranslation[38] = 5;
-    padTranslation[46] = 6;
-    padTranslation[44] = 7;
-    
-    padTranslation[48] = 8;
-    padTranslation[47] = 9;
-    padTranslation[45] = 10;
-    padTranslation[43] = 11;
-    
-    padTranslation[49] = 12;
-    padTranslation[55] = 13;
-    padTranslation[51] = 14;
-    padTranslation[53] = 15;
-    
-    // var offset = 1;
-	// for (var i = 0; i < 128; i++)
-	// {
-		// padTranslation[i] = offset + i;
-		// if (padTranslation[i] < 0 || padTranslation[i] > 127) {
-			// padTranslation[i] = -1;
-		// }
-	// }
-	this.midiInPads.setKeyTranslationTable(padTranslation);
-	//padTrans.set(Math.floor(offset/8), 1);;
-    //this.midiInPads.setShouldConsumeEvents(false);
-    // Translate Poly AT to Timbre:
     this.midiInPads.assignPolyphonicAftertouchToExpression(9, NoteExpression.TIMBRE_UP, 5 );
+    this.padTranslation = initArray(-1, 128);
+    
     
     // PADS lights:
     //for (var i = 0; i < 127; i++) {
@@ -94,6 +59,10 @@ function MPCStudio()
     // -------------------------------------------------------------  
         
     this.buttons = {
+        "bankA"         : 35,
+        "bankB"         : 36,
+        "bankC"         : 37,
+        "bankD"         : 38,
         "tapTempo"      : 53,
         "playStart"     : 113,
         "play"          : 118,
@@ -116,25 +85,78 @@ function MPCStudio()
     return this;
 }
 
+function switchBank()
+{
+    println("switchBank() - base offset: " + mpcStudio.bank * 16);
+    
+    // TODO: docstate and stuff with value observers
+    var button = 34 + mpcStudio.bank;
+    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 35, 0);
+    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 36, 0);
+    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 37, 0);
+    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 38, 0);
+    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, button, MPC_STUDIO_MIDI_OUT_BUTTON_COLOR_PRIMARY);
+    
+    mpcStudio.padTranslation[37] = mpcStudio.bank * 16 - 16;
+    println("pad1: " +padTranslation[37]);
+    mpcStudio.padTranslation[36] = mpcStudio.bank * 16 - 15;
+    mpcStudio.padTranslation[42] = mpcStudio.bank * 16 - 14;
+    mpcStudio.padTranslation[82] = mpcStudio.bank * 16 - 13;
+    
+    mpcStudio.padTranslation[40] = mpcStudio.bank * 16 - 12;
+    mpcStudio.padTranslation[38] = mpcStudio.bank * 16 - 11;
+    mpcStudio.padTranslation[46] = mpcStudio.bank * 16 - 10;
+    mpcStudio.padTranslation[44] = mpcStudio.bank * 16 - 9;
+    
+    mpcStudio.padTranslation[48] = mpcStudio.bank * 16 - 8;
+    mpcStudio.padTranslation[47] = mpcStudio.bank * 16 - 7;
+    mpcStudio.padTranslation[45] = mpcStudio.bank * 16 - 6;
+    mpcStudio.padTranslation[43] = mpcStudio.bank * 16 - 5;
+    
+    mpcStudio.padTranslation[49] = mpcStudio.bank * 16 - 4;
+    mpcStudio.padTranslation[55] = mpcStudio.bank * 16 - 3;
+    mpcStudio.padTranslation[51] = mpcStudio.bank * 16 - 2;
+    mpcStudio.padTranslation[53] = mpcStudio.bank * 16 - 1;
+    
+	//mpcStudio.midiInPads.setKeyTranslationTable(padTranslation);
+}
+
 function onMidi(status, data1, data2)
 {
     var midi = new MidiData(status, data1, data2);
-    println("onMidi -> ST: " + midi.status + " / D1: " + midi.data1 + " / D2: " + midi.data2 + " / CH: " + midi.channel() + " / TYPE: " + midi.type());
+    println("onMidi -> ST: " + midi.status + " / D1: " + midi.data1 + " / D2: " + midi.data2 + " / CH: " + getChannel(midi) + " / TYPE: " + getMidiType(midi));
     
-    switch (midi.channel()) {
+    switch (getChannel(midi)) {
         case 0:
-            handleLaunchControls(midi);
+            handleControlButtons(midi);
             break;
         case 9:
+            println("a pad!");
             handlePads(midi)
             break;
     }
 }
 
-function handleLaunchControls(midi)
+function handleControlButtons(midi)
 {
-    if (midi.isOn()) {
+    if (midi.data2 > 64) {
         switch(midi.data1) {
+            case mpcStudio.buttons["bankA"]:
+                mpcStudio.bank = 1;
+                switchBank();
+                break;
+            case mpcStudio.buttons["bankB"]:
+                mpcStudio.bank = 2;
+                switchBank();
+                break;
+            case mpcStudio.buttons["bankC"]:
+                mpcStudio.bank = 3;
+                switchBank();
+                break;
+            case mpcStudio.buttons["bankD"]:
+                mpcStudio.bank = 4;
+                switchBank();
+                break;
             case mpcStudio.buttons["record"]:
                 mpcStudio.transport.record();
                 break;
@@ -158,7 +180,10 @@ function handleLaunchControls(midi)
 }
 
 function handlePads(midi) {
-    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_PADS, midi.data1, midi.isOn() ? MPC_STUDIO_MIDI_OUT_PAD_COLOR_RED : MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_GREEN);
+    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_PADS, midi.data1, midi.data2 > 0 ? MPC_STUDIO_MIDI_OUT_PAD_COLOR_RED : MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_GREEN);
+    
+    println(midi.data1 * bank);
+    this.midiInPads.sendRawMidiEvent(midi.status, midi.data1 * bank, midi.data2);
 }
 
 function onSysex(data)
@@ -168,4 +193,43 @@ function onSysex(data)
 
 function exit()
 {
+}
+
+
+// helpers below
+function getChannel(midi) {
+    return(midi.status & 0xF);
+}
+
+function getMidiType(midi) {
+    var test = midi.status & 0xF0;
+    switch(test) {
+        case 0x80:
+           return "NoteOff";
+        case 0x90:
+           // Note on with Velocity 0 is also considered Note Off:
+           if(midi.data1 === 0) {
+              return "NoteOff";
+           }
+           else {
+              return "NoteOn";
+           }
+        case 0xA0:
+           return "KeyPressure";
+        case 0xB0:
+           return "CC";
+        case 0xC0:
+           return "ProgramChange";
+        case 0xD0:
+           return "ChannelPressure";
+        case 0xE0:
+           return "PitchBend";
+    };
+    return "Other";
+}
+   
+function MidiData(status, data1, data2) {
+   this.status = status;
+   this.data1 = data1;
+   this.data2 = data2;
 }
