@@ -37,8 +37,14 @@ function MPCStudio()
     host.getMidiOutPort(0).setShouldSendMidiBeatClock(true);
     
     docState = host.getDocumentState();
-    bankMode = docState.getEnumSetting("Offset", "Banks", ["octave", "16"], "octave");
-    bankMode.addValueObserver(function(mode) {
+    this.bankSelected = docState.getEnumSetting("Active", "Pad Banks", ["A", "B", "C", "D", "E", "F", "G", "H"], "A");
+    this.bankSelected.addValueObserver(function(newBank) {
+        bank = (newBank.charCodeAt(0) - 64)
+        switchBank();
+    });
+    
+    this.bankMode = docState.getEnumSetting("Offset", "Pad Banks", ["octave", "16"], "octave");
+    this.bankMode.addValueObserver(function(mode) {
         if (mode == "octave") {
             bankOffset = 12;
         } else {
@@ -64,6 +70,7 @@ function MPCStudio()
     this.padTranslation = initArray(-1, 128);
     
     this.buttons = {
+        "shift"         : 49,
         "bankA"         : 35,
         "bankB"         : 36,
         "bankC"         : 37,
@@ -92,38 +99,37 @@ function MPCStudio()
 
 function switchBank()
 {
-    var bankOffset = mpcStudio.bankOffset; 
-   
-    println("switchBank to " + mpcStudio.bank + " - base offset: " + mpcStudio.bank * 16);
+    println("switchBank to " + mpcStudio.bank + " - base offset: " + mpcStudio.bankOffset * 16);
+       
+    var button = 35 + (mpcStudio.bank - 1) % 4;
+    var color = mpcStudio.bank < 5 ? MPC_STUDIO_MIDI_OUT_BUTTON_COLOR_PRIMARY : MPC_STUDIO_MIDI_OUT_BUTTON_COLOR_SECONDARY;
     
-    // TODO: docstate and stuff with value observers
-    var button = 34 + mpcStudio.bank;
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 35, 0);
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 36, 0);
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 37, 0);
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 38, 0);
-    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, button, MPC_STUDIO_MIDI_OUT_BUTTON_COLOR_PRIMARY);
+    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, button, color);
     
-    mpcStudio.padTranslation[37] = mpcStudio.bank * bankOffset - bankOffset;
+    mpcStudio.padTranslation[37] = mpcStudio.bank * mpcStudio.bankOffset - mpcStudio.bankOffset;
     println("pad1: " +padTranslation[37]);
-    mpcStudio.padTranslation[36] = mpcStudio.bank * bankOffset - (bankOffset - 1);
-    mpcStudio.padTranslation[42] = mpcStudio.bank * bankOffset - (bankOffset - 2);
-    mpcStudio.padTranslation[82] = mpcStudio.bank * bankOffset - (bankOffset - 3);
+    mpcStudio.padTranslation[36] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 1);
+    mpcStudio.padTranslation[42] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 2);
+    mpcStudio.padTranslation[82] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 3);
     
-    mpcStudio.padTranslation[40] = mpcStudio.bank * bankOffset - (bankOffset - 4);
-    mpcStudio.padTranslation[38] = mpcStudio.bank * bankOffset - (bankOffset - 5);
-    mpcStudio.padTranslation[46] = mpcStudio.bank * bankOffset - (bankOffset - 6);
-    mpcStudio.padTranslation[44] = mpcStudio.bank * bankOffset - (bankOffset - 7);
+    mpcStudio.padTranslation[40] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 4);
+    mpcStudio.padTranslation[38] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 5);
+    mpcStudio.padTranslation[46] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 6);
+    mpcStudio.padTranslation[44] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 7);
     
-    mpcStudio.padTranslation[48] = mpcStudio.bank * bankOffset - (bankOffset - 8);
-    mpcStudio.padTranslation[47] = mpcStudio.bank * bankOffset - (bankOffset - 9);
-    mpcStudio.padTranslation[45] = mpcStudio.bank * bankOffset - (bankOffset - 10);
-    mpcStudio.padTranslation[43] = mpcStudio.bank * bankOffset - (bankOffset - 11);
+    mpcStudio.padTranslation[48] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 8);
+    mpcStudio.padTranslation[47] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 9);
+    mpcStudio.padTranslation[45] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 10);
+    mpcStudio.padTranslation[43] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 11);
     
-    mpcStudio.padTranslation[49] = mpcStudio.bank * bankOffset - (bankOffset - 12);
-    mpcStudio.padTranslation[55] = mpcStudio.bank * bankOffset - (bankOffset - 13);
-    mpcStudio.padTranslation[51] = mpcStudio.bank * bankOffset - (bankOffset - 14);
-    mpcStudio.padTranslation[53] = mpcStudio.bank * bankOffset - (bankOffset - 16);
+    mpcStudio.padTranslation[49] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 12);
+    mpcStudio.padTranslation[55] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 13);
+    mpcStudio.padTranslation[51] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 14);
+    mpcStudio.padTranslation[53] = mpcStudio.bank * mpcStudio.bankOffset - (mpcStudio.bankOffset - 15);
     
 	mpcStudio.midiInPads.setKeyTranslationTable(padTranslation);
 }
@@ -145,23 +151,23 @@ function onMidi(status, data1, data2)
 
 function handleControlButtons(midi)
 {
+    // NOTE ON
     if (midi.data2 > 64) {
         switch(midi.data1) {
+            case mpcStudio.buttons["shift"]:
+                mpcStudio.shiftMode = true;
+                break;
             case mpcStudio.buttons["bankA"]:
-                mpcStudio.bank = 1;
-                switchBank();
+                mpcStudio.shiftMode ? mpcStudio.bankSelected.set("E") : mpcStudio.bankSelected.set("A");
                 break;
             case mpcStudio.buttons["bankB"]:
-                mpcStudio.bank = 2;
-                switchBank();
+                mpcStudio.shiftMode ? mpcStudio.bankSelected.set("F") : mpcStudio.bankSelected.set("B");
                 break;
             case mpcStudio.buttons["bankC"]:
-                mpcStudio.bank = 3;
-                switchBank();
+                mpcStudio.shiftMode ? mpcStudio.bankSelected.set("G") : mpcStudio.bankSelected.set("C");
                 break;
             case mpcStudio.buttons["bankD"]:
-                mpcStudio.bank = 4;
-                switchBank();
+                mpcStudio.shiftMode ? mpcStudio.bankSelected.set("H") : mpcStudio.bankSelected.set("D");
                 break;
             case mpcStudio.buttons["record"]:
                 mpcStudio.transport.record();
@@ -180,6 +186,14 @@ function handleControlButtons(midi)
                 break;
             case mpcStudio.buttons["tapTempo"]:
                 mpcStudio.transport.tapTempo();
+                break;
+        }
+    }
+    // NOTE OFF
+    else {
+        switch(midi.data1) {
+            case mpcStudio.buttons["shift"]:
+                mpcStudio.shiftMode = false;
                 break;
         }
     }
