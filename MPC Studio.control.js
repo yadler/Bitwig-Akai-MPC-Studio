@@ -50,14 +50,6 @@ function MPCStudio()
     this.midiInPads.assignPolyphonicAftertouchToExpression(9, NoteExpression.TIMBRE_UP, 5 );
     this.padTranslation = initArray(-1, 128);
     
-    
-    // PADS lights:
-    //for (var i = 0; i < 127; i++) {
-    //    host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTON_COLOR, i, 1);
-    //}
-    
-    // -------------------------------------------------------------  
-        
     this.buttons = {
         "bankA"         : 35,
         "bankB"         : 36,
@@ -87,7 +79,10 @@ function MPCStudio()
 
 function switchBank()
 {
-    println("switchBank() - base offset: " + mpcStudio.bank * 16);
+    // TODO simplify code
+    var padOffset = 12;
+    
+    println("switchBank to " + mpcStudio.bank + " - base offset: " + mpcStudio.bank * 16);
     
     // TODO: docstate and stuff with value observers
     var button = 34 + mpcStudio.bank;
@@ -97,28 +92,28 @@ function switchBank()
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 38, 0);
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, button, MPC_STUDIO_MIDI_OUT_BUTTON_COLOR_PRIMARY);
     
-    mpcStudio.padTranslation[37] = mpcStudio.bank * 16 - 16;
+    mpcStudio.padTranslation[37] = mpcStudio.bank * padOffset - padOffset;
     println("pad1: " +padTranslation[37]);
-    mpcStudio.padTranslation[36] = mpcStudio.bank * 16 - 15;
-    mpcStudio.padTranslation[42] = mpcStudio.bank * 16 - 14;
-    mpcStudio.padTranslation[82] = mpcStudio.bank * 16 - 13;
+    mpcStudio.padTranslation[36] = mpcStudio.bank * padOffset - (padOffset - 1);
+    mpcStudio.padTranslation[42] = mpcStudio.bank * padOffset - (padOffset - 2);
+    mpcStudio.padTranslation[82] = mpcStudio.bank * padOffset - (padOffset - 3);
     
-    mpcStudio.padTranslation[40] = mpcStudio.bank * 16 - 12;
-    mpcStudio.padTranslation[38] = mpcStudio.bank * 16 - 11;
-    mpcStudio.padTranslation[46] = mpcStudio.bank * 16 - 10;
-    mpcStudio.padTranslation[44] = mpcStudio.bank * 16 - 9;
+    mpcStudio.padTranslation[40] = mpcStudio.bank * padOffset - (padOffset - 4);
+    mpcStudio.padTranslation[38] = mpcStudio.bank * padOffset - (padOffset - 5);
+    mpcStudio.padTranslation[46] = mpcStudio.bank * padOffset - (padOffset - 6);
+    mpcStudio.padTranslation[44] = mpcStudio.bank * padOffset - (padOffset - 7);
     
-    mpcStudio.padTranslation[48] = mpcStudio.bank * 16 - 8;
-    mpcStudio.padTranslation[47] = mpcStudio.bank * 16 - 7;
-    mpcStudio.padTranslation[45] = mpcStudio.bank * 16 - 6;
-    mpcStudio.padTranslation[43] = mpcStudio.bank * 16 - 5;
+    mpcStudio.padTranslation[48] = mpcStudio.bank * padOffset - (padOffset - 8);
+    mpcStudio.padTranslation[47] = mpcStudio.bank * padOffset - (padOffset - 9);
+    mpcStudio.padTranslation[45] = mpcStudio.bank * padOffset - (padOffset - 10);
+    mpcStudio.padTranslation[43] = mpcStudio.bank * padOffset - (padOffset - 11);
     
-    mpcStudio.padTranslation[49] = mpcStudio.bank * 16 - 4;
-    mpcStudio.padTranslation[55] = mpcStudio.bank * 16 - 3;
-    mpcStudio.padTranslation[51] = mpcStudio.bank * 16 - 2;
-    mpcStudio.padTranslation[53] = mpcStudio.bank * 16 - 1;
+    mpcStudio.padTranslation[49] = mpcStudio.bank * padOffset + 0;
+    mpcStudio.padTranslation[55] = mpcStudio.bank * padOffset + 1;
+    mpcStudio.padTranslation[51] = mpcStudio.bank * padOffset + 2;
+    mpcStudio.padTranslation[53] = mpcStudio.bank * padOffset + 3;
     
-	//mpcStudio.midiInPads.setKeyTranslationTable(padTranslation);
+	mpcStudio.midiInPads.setKeyTranslationTable(padTranslation);
 }
 
 function onMidi(status, data1, data2)
@@ -131,7 +126,6 @@ function onMidi(status, data1, data2)
             handleControlButtons(midi);
             break;
         case 9:
-            println("a pad!");
             handlePads(midi)
             break;
     }
@@ -181,9 +175,6 @@ function handleControlButtons(midi)
 
 function handlePads(midi) {
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_PADS, midi.data1, midi.data2 > 0 ? MPC_STUDIO_MIDI_OUT_PAD_COLOR_RED : MPC_STUDIO_MIDI_OUT_PAD_COLOR_DARK_GREEN);
-    
-    println(midi.data1 * bank);
-    this.midiInPads.sendRawMidiEvent(midi.status, midi.data1 * bank, midi.data2);
 }
 
 function onSysex(data)
