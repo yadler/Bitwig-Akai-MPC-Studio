@@ -30,10 +30,23 @@ function MPCStudio()
 {
     this.shiftMode = false;
     this.bank = 1;
+    this.bankOffset = 12;
     
     host.getMidiInPort(0).setMidiCallback(onMidi);
     host.getMidiInPort(0).setSysexCallback(onSysex);
     host.getMidiOutPort(0).setShouldSendMidiBeatClock(true);
+    
+    docState = host.getDocumentState();
+    bankMode = docState.getEnumSetting("Offset", "Banks", ["octave", "16"], "octave");
+    bankMode.addValueObserver(function(mode) {
+        if (mode == "octave") {
+            bankOffset = 12;
+        } else {
+            bankOffset = 16;
+        }
+        switchBank();
+    });
+    
     
     // Blink with all
     for (var i = 0; i < 128; i++) {
@@ -79,9 +92,8 @@ function MPCStudio()
 
 function switchBank()
 {
-    // TODO simplify code
-    var padOffset = 12;
-    
+    var bankOffset = mpcStudio.bankOffset; 
+   
     println("switchBank to " + mpcStudio.bank + " - base offset: " + mpcStudio.bank * 16);
     
     // TODO: docstate and stuff with value observers
@@ -92,26 +104,26 @@ function switchBank()
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, 38, 0);
     host.getMidiOutPort(0).sendMidi(MPC_STUDIO_MIDI_OUT_BUTTONS, button, MPC_STUDIO_MIDI_OUT_BUTTON_COLOR_PRIMARY);
     
-    mpcStudio.padTranslation[37] = mpcStudio.bank * padOffset - padOffset;
+    mpcStudio.padTranslation[37] = mpcStudio.bank * bankOffset - bankOffset;
     println("pad1: " +padTranslation[37]);
-    mpcStudio.padTranslation[36] = mpcStudio.bank * padOffset - (padOffset - 1);
-    mpcStudio.padTranslation[42] = mpcStudio.bank * padOffset - (padOffset - 2);
-    mpcStudio.padTranslation[82] = mpcStudio.bank * padOffset - (padOffset - 3);
+    mpcStudio.padTranslation[36] = mpcStudio.bank * bankOffset - (bankOffset - 1);
+    mpcStudio.padTranslation[42] = mpcStudio.bank * bankOffset - (bankOffset - 2);
+    mpcStudio.padTranslation[82] = mpcStudio.bank * bankOffset - (bankOffset - 3);
     
-    mpcStudio.padTranslation[40] = mpcStudio.bank * padOffset - (padOffset - 4);
-    mpcStudio.padTranslation[38] = mpcStudio.bank * padOffset - (padOffset - 5);
-    mpcStudio.padTranslation[46] = mpcStudio.bank * padOffset - (padOffset - 6);
-    mpcStudio.padTranslation[44] = mpcStudio.bank * padOffset - (padOffset - 7);
+    mpcStudio.padTranslation[40] = mpcStudio.bank * bankOffset - (bankOffset - 4);
+    mpcStudio.padTranslation[38] = mpcStudio.bank * bankOffset - (bankOffset - 5);
+    mpcStudio.padTranslation[46] = mpcStudio.bank * bankOffset - (bankOffset - 6);
+    mpcStudio.padTranslation[44] = mpcStudio.bank * bankOffset - (bankOffset - 7);
     
-    mpcStudio.padTranslation[48] = mpcStudio.bank * padOffset - (padOffset - 8);
-    mpcStudio.padTranslation[47] = mpcStudio.bank * padOffset - (padOffset - 9);
-    mpcStudio.padTranslation[45] = mpcStudio.bank * padOffset - (padOffset - 10);
-    mpcStudio.padTranslation[43] = mpcStudio.bank * padOffset - (padOffset - 11);
+    mpcStudio.padTranslation[48] = mpcStudio.bank * bankOffset - (bankOffset - 8);
+    mpcStudio.padTranslation[47] = mpcStudio.bank * bankOffset - (bankOffset - 9);
+    mpcStudio.padTranslation[45] = mpcStudio.bank * bankOffset - (bankOffset - 10);
+    mpcStudio.padTranslation[43] = mpcStudio.bank * bankOffset - (bankOffset - 11);
     
-    mpcStudio.padTranslation[49] = mpcStudio.bank * padOffset + 0;
-    mpcStudio.padTranslation[55] = mpcStudio.bank * padOffset + 1;
-    mpcStudio.padTranslation[51] = mpcStudio.bank * padOffset + 2;
-    mpcStudio.padTranslation[53] = mpcStudio.bank * padOffset + 3;
+    mpcStudio.padTranslation[49] = mpcStudio.bank * bankOffset - (bankOffset - 12);
+    mpcStudio.padTranslation[55] = mpcStudio.bank * bankOffset - (bankOffset - 13);
+    mpcStudio.padTranslation[51] = mpcStudio.bank * bankOffset - (bankOffset - 14);
+    mpcStudio.padTranslation[53] = mpcStudio.bank * bankOffset - (bankOffset - 16);
     
 	mpcStudio.midiInPads.setKeyTranslationTable(padTranslation);
 }
